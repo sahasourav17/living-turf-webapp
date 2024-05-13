@@ -11,6 +11,7 @@ import {
   Title,
   Tooltip,
   TimeScale,
+  TimeSeriesScale,
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
 
@@ -24,16 +25,43 @@ ChartJS.register(
   BarController,
   Title,
   Tooltip,
-  TimeScale
+  TimeScale,
+  TimeSeriesScale
 );
+import "chartjs-adapter-moment";
+
 const TemperatureChart = ({ chartData }) => {
-  const labels = chartData.map((data) => data.date);
-  const airTemperatureData = chartData.map((data) => data.airTemperature);
-  const soilTemperatureData = chartData.map((data) => data.soilTemperature);
-  const dewPointTemperatureData = chartData.map(
+  const groupedData = chartData.reduce((acc, cur) => {
+    const date = cur.date;
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(cur);
+    return acc;
+  }, {});
+
+  const filteredData = Object.values(groupedData).flatMap((dayData) => {
+    const filteredDayData = [];
+    let prevHour = -2;
+    for (const data of dayData) {
+      const hour = new Date(data.dateTime).getHours();
+      if (hour - prevHour >= 6) {
+        filteredDayData.push(data);
+        prevHour = hour;
+      }
+    }
+    return filteredDayData;
+  });
+
+  const labels = filteredData.map((data) => data.timeStamp);
+  const airTemperatureData = filteredData.map((data) => data.airTemperature);
+  const soilTemperatureData = filteredData.map((data) => data.soilTemperature);
+  const dewPointTemperatureData = filteredData.map(
     (data) => data.dewPointTemperature
   );
-  const relativeHumidityData = chartData.map((data) => data.relativeHumidity);
+  const relativeHumidityData = filteredData.map(
+    (data) => data.relativeHumidity
+  );
 
   const timePeriods = chartData.map((data) => {
     const hour = new Date(data.dateTime).getHours();
@@ -48,69 +76,66 @@ const TemperatureChart = ({ chartData }) => {
     }
   });
 
-  console.log(timePeriods);
-
   const data = {
-    // labels: uniqueLabels,
     labels: labels,
     datasets: [
       {
         label: "Air Temperature",
         data: airTemperatureData,
-        borderColor: "rgba(255, 99, 132, 0.6)",
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
+        borderColor: "rgba(255, 99, 132)",
+        backgroundColor: "rgba(255, 99, 132)",
         yAxisID: "temperature",
-        borderWidth: 1.5,
+        borderWidth: 1,
+        tension: 0.3,
         // pointStyle: false,
       },
       {
         label: "Soil Temperature",
         data: soilTemperatureData,
-        borderColor: "rgba(54, 162, 235, 0.6)",
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        borderColor: "rgba(54, 162, 235)",
+        backgroundColor: "rgba(54, 162, 235)",
         yAxisID: "temperature",
-        borderWidth: 1.5,
-        pointStyle: false,
+        borderWidth: 1,
+        tension: 0.3,
+        // pointStyle: false,
       },
       {
         label: "Dew Point Temperature",
         data: dewPointTemperatureData,
-        borderColor: "rgba(255, 206, 86, 0.6)",
-        backgroundColor: "rgba(255, 206, 86, 0.2)",
+        borderColor: "rgba(255, 206, 86)",
+        backgroundColor: "rgba(255, 206, 86)",
         yAxisID: "temperature",
-        borderWidth: 1.5,
-        pointStyle: false,
+        borderWidth: 1,
+        tension: 0.3,
+        // pointStyle: false,
       },
       {
         label: "Relative Humidity",
         data: relativeHumidityData,
-        borderColor: "rgba(75, 192, 192, 0.6)",
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        borderColor: "rgba(75, 192, 192)",
+        backgroundColor: "rgba(75, 192, 192)",
         yAxisID: "humidity",
-        borderWidth: 1.5,
-        pointStyle: false,
-      },
-      {
-        label: "Time Periods",
-        data: timePeriods,
-        type: "bar",
-        yAxisID: "time",
         borderWidth: 1,
-        categoryPercentage: 1.0,
-        barPercentage: 0.8,
-        order: 0,
+        tension: 0.3,
+        // pointStyle: false,
       },
     ],
   };
 
   const options = {
+    interaction: {
+      mode: "index",
+      intersect: false,
+    },
     scales: {
       x: {
-        // type: "time",
-        // time: {
-        //   tooltipFormat: "ll",
-        //   unit: "day",
-        // },
+        type: "timeseries",
+        stepSize: 2,
+        time: {
+          displayFormats: {
+            hour: "D MMM HH:mm",
+          },
+        },
       },
       y: {
         beginAtZero: true,
@@ -136,6 +161,9 @@ const TemperatureChart = ({ chartData }) => {
         ticks: {
           display: false,
         },
+        grid: {
+          display: false,
+        },
       },
       y2: {
         display: true,
@@ -146,6 +174,18 @@ const TemperatureChart = ({ chartData }) => {
         },
         ticks: {
           display: false,
+        },
+      },
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: "bottom",
+        labels: {
+          boxWidth: 20,
+          font: {
+            size: 12,
+          },
         },
       },
     },

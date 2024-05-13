@@ -1,4 +1,4 @@
-export const chartData = [
+export const temperatureData = [
   {
     timeStamp: 1714694400000,
     date: "2024-05-03",
@@ -4036,5 +4036,22 @@ export const windGraph = [
     windSpeed: 3.64,
     gusts: 5.94,
     windDirection: "N",
+  },
+];
+
+export const check = [
+  {
+    timeStamp: 1714694400000,
+    date: "2024-05-03",
+    dateTime: "2024-05-03T00:00:00.000Z",
+    windSpeed: 0,
+    deltaT: 0.7199999999999989,
+  },
+  {
+    timeStamp: 1714698000000,
+    date: "2024-05-03",
+    dateTime: "2024-05-03T01:00:00.000Z",
+    windSpeed: 0,
+    deltaT: 0.43000000000000327,
   },
 ];
