@@ -36,6 +36,13 @@ function App() {
       if (window.myVariable) {
         setWindData([...window.myVariable]);
       }
+    } else if (queryParam.platform === "android") {
+      if (window.ReactNativeWebView.injectedObjectJson()) {
+        const injectedObj = JSON.parse(
+          window.ReactNativeWebView.injectedObjectJson()
+        ).content;
+        setWindData([...JSON.parse(injectedObj)]);
+      }
     }
   }, [window.myVariable]);
 
