@@ -12,8 +12,9 @@ import {
   Tooltip,
   TimeScale,
   TimeSeriesScale,
+  Legend,
 } from "chart.js";
-import { Bar, Line } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -26,7 +27,8 @@ ChartJS.register(
   Title,
   Tooltip,
   TimeScale,
-  TimeSeriesScale
+  TimeSeriesScale,
+  Legend
 );
 import "chartjs-adapter-moment";
 
@@ -80,42 +82,29 @@ const TemperatureChart = ({ chartData }) => {
     labels: labels,
     datasets: [
       {
-        label: "Air Temperature",
+        label: "Ave Temp (°C)",
         data: airTemperatureData,
         borderColor: "rgba(245, 126, 66)",
         backgroundColor: "rgba(245, 126, 66)",
-        // yAxisID: "temperature",
         borderWidth: 2,
         tension: 0.3,
         pointStyle: false,
       },
       {
-        label: "Soil Temperature",
+        label: "Soil Temp (°C)",
         data: soilTemperatureData,
         borderColor: "black",
         backgroundColor: "black",
-        // yAxisID: "temperature",
         borderWidth: 2,
         tension: 0.3,
-        borderDash: [5, 5],
+        borderDash: [10, 5],
         pointStyle: false,
       },
       {
-        label: "Dew Point Temperature",
-        data: dewPointTemperatureData,
-        borderColor: "rgba(255, 206, 86)",
-        backgroundColor: "rgba(255, 206, 86)",
-        // yAxisID: "temperature",
-        borderWidth: 2,
-        tension: 0.3,
-        pointStyle: false,
-      },
-      {
-        label: "Relative Humidity",
+        label: "Humidity (%)",
         data: relativeHumidityData,
         borderColor: "blue",
         backgroundColor: "blue",
-        // yAxisID: "humidity",
         borderWidth: 2,
         tension: 0.3,
         pointStyle: false,
@@ -123,7 +112,25 @@ const TemperatureChart = ({ chartData }) => {
     ],
   };
 
+  const dewPointTemperatureDataset = {
+    label: "Dewpoint (°C)",
+    data: dewPointTemperatureData,
+    backgroundColor: "rgba(8, 189, 49)",
+    type: "bar",
+    barThickness: "flex",
+  };
+
+  data.datasets.push(dewPointTemperatureDataset);
+
+  const maxTemperature = Math.max(
+    Math.max(...airTemperatureData),
+    Math.max(...soilTemperatureData),
+    Math.max(...dewPointTemperatureData)
+  );
+
   const options = {
+    responsive: true,
+    maintainAspectRatio: false,
     interaction: {
       mode: "index",
       intersect: false,
@@ -132,9 +139,12 @@ const TemperatureChart = ({ chartData }) => {
       x: {
         type: "timeseries",
         stepSize: 2,
+        grid: {
+          display: false,
+        },
         time: {
           displayFormats: {
-            hour: "D MMM HH:mm",
+            hour: "D MMM",
           },
         },
       },
@@ -144,18 +154,19 @@ const TemperatureChart = ({ chartData }) => {
           display: true,
           text: "Temperature (°C)",
         },
+        suggestedMin: 0,
+        suggestedMax: maxTemperature,
         position: "left",
         id: "temperature",
-
         ticks: {
-          display: false,
+          stepSize: 10,
         },
       },
       y1: {
         beginAtZero: true,
         title: {
           display: true,
-          text: "Relative Humidity (%)",
+          text: "Humidity (%)",
         },
         position: "right",
         id: "humidity",
@@ -168,7 +179,6 @@ const TemperatureChart = ({ chartData }) => {
       },
       y2: {
         display: true,
-        // position: "right",
         id: "time",
         grid: {
           display: false,
@@ -187,7 +197,33 @@ const TemperatureChart = ({ chartData }) => {
           font: {
             size: 12,
           },
+          generateLabels: function (chart) {
+            return chart.data.datasets.map(function (dataset, index) {
+              return {
+                text: dataset.label,
+                fillStyle: dataset.backgroundColor || "rgba(0,0,0,0)",
+                strokeStyle: dataset.borderColor || "rgba(0,0,0,0)",
+                lineWidth: dataset.borderWidth || 1,
+                borderDash: dataset.borderDash || [],
+                pointStyle: "line",
+                index: index,
+              };
+            });
+          },
         },
+      },
+      title: {
+        display: true,
+        text: "Temperatures & Humidity",
+        font: {
+          size: 16,
+          weight: "bold",
+        },
+        padding: {
+          top: 10,
+          bottom: 10,
+        },
+        position: "top",
       },
     },
   };
